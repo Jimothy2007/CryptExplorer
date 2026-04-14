@@ -9,12 +9,14 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float knockbackResistance = 1f;
     [SerializeField] private bool isGrounded = false;
 
+    private Transform cameraTransform;
     private Rigidbody rb;
     private Vector2 moveInput;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        cameraTransform = Camera.main.transform;
     }
 
     void OnMove(InputValue inputValue)
@@ -32,12 +34,24 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        Vector3 moveDirection = new Vector3(moveInput.x, 0, moveInput.y);
+        float cameraYaw = cameraTransform.eulerAngles.y;
+        Quaternion cameraRotation = Quaternion.Euler(0, cameraYaw, 0);
+
+        Vector3 cameraForward = cameraRotation * Vector3.forward;
+        Vector3 cameraRight = cameraRotation * Vector3.right;
+
+        Vector3 moveDirection = (cameraForward * moveInput.y + cameraRight * moveInput.x);
 
         Vector3 targetVelocity = moveDirection * moveSpeed;
         targetVelocity.y = rb.linearVelocity.y;
 
         rb.linearVelocity = targetVelocity;
+
+        if (moveDirection != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.fixedDeltaTime * 10f);
+        }
     }
 
     public void ApplyKnockback(Vector3 direction, float force)
