@@ -1,3 +1,4 @@
+using Unity.Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -8,15 +9,15 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float jumpHeight = 5f;
     [SerializeField] private float knockbackResistance = 1f;
     [SerializeField] private bool isGrounded = false;
+    [SerializeField] private Transform playerMesh;
+    [SerializeField] private Transform cameraBoom;
 
-    private Transform cameraTransform;
     private Rigidbody rb;
     private Vector2 moveInput;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        cameraTransform = Camera.main.transform;
     }
 
     void OnMove(InputValue inputValue)
@@ -34,13 +35,13 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        float cameraYaw = cameraTransform.eulerAngles.y;
-        Quaternion cameraRotation = Quaternion.Euler(0, cameraYaw, 0);
+        float boomYaw = cameraBoom.eulerAngles.y;
+        Quaternion boomRotation = Quaternion.Euler(0, boomYaw, 0);
 
-        Vector3 cameraForward = cameraRotation * Vector3.forward;
-        Vector3 cameraRight = cameraRotation * Vector3.right;
+        Vector3 boomForward = boomRotation * Vector3.forward;
+        Vector3 boomRight = boomRotation * Vector3.right;
 
-        Vector3 moveDirection = (cameraForward * moveInput.y + cameraRight * moveInput.x);
+        Vector3 moveDirection = (boomForward * moveInput.y + boomRight * moveInput.x);
 
         Vector3 targetVelocity = moveDirection * moveSpeed;
         targetVelocity.y = rb.linearVelocity.y;
@@ -49,8 +50,9 @@ public class PlayerMovement : MonoBehaviour
 
         if (moveDirection != Vector3.zero)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.fixedDeltaTime * 10f);
+            float targetYaw = Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg;
+            Quaternion targetRotation = Quaternion.Euler(0, targetYaw, 0);
+            playerMesh.rotation = Quaternion.Slerp(playerMesh.rotation, targetRotation, Time.fixedDeltaTime * 10f);
         }
     }
 
