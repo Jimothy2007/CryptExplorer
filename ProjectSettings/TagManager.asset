@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - PushableBlock
+  - PressurePlate
   layers:
   - Default
   - TransparentFX

@@ -12,7 +12,7 @@ public class PushableBlock : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
 
-        rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
     }
 
     private void FixedUpdate()
