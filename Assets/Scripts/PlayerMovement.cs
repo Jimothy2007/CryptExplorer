@@ -5,19 +5,23 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float maxMoveSpeed = 5f;
+    [SerializeField] private float pushingMoveSpeed = 2f;
     [SerializeField] private float jumpHeight = 5f;
     [SerializeField] private float knockbackResistance = 1f;
     [SerializeField] private bool isGrounded = false;
     [SerializeField] private Transform playerMesh;
     [SerializeField] private Transform cameraBoom;
 
+    [SerializeField] private float currentMoveSpeed;
     private Rigidbody rb;
     private Vector2 moveInput;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+
+        currentMoveSpeed = maxMoveSpeed;
     }
 
     void OnMove(InputValue inputValue)
@@ -43,7 +47,7 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 moveDirection = (boomForward * moveInput.y + boomRight * moveInput.x);
 
-        Vector3 targetVelocity = moveDirection * moveSpeed;
+        Vector3 targetVelocity = moveDirection * currentMoveSpeed;
         targetVelocity.y = rb.linearVelocity.y;
 
         rb.linearVelocity = targetVelocity;
@@ -73,5 +77,15 @@ public class PlayerMovement : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawRay(transform.position, Vector3.down * 1.1f);
+    }
+
+    public void changeToPushSpeed()
+    {
+        currentMoveSpeed = pushingMoveSpeed;
+    }
+
+    public void changeToNormalSpeed()
+    {
+        currentMoveSpeed = maxMoveSpeed;
     }
 }
