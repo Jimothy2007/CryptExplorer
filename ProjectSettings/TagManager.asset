@@ -6,6 +6,8 @@ TagManager:
   tags:
   - PushableBlock
   - PressurePlate
+  - Spike
+  - HealthPickup
   layers:
   - Default
   - TransparentFX
