@@ -8,6 +8,7 @@ TagManager:
   - PressurePlate
   - Spike
   - HealthPickup
+  - Lever
   layers:
   - Default
   - TransparentFX
