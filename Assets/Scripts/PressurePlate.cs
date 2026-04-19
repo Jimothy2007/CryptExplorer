@@ -51,6 +51,18 @@ public class PressurePlate : MonoBehaviour
         }
     }
 
+    private void OnCollisionStay(UnityEngine.Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player") || collision.gameObject.CompareTag("PushableBlock"))
+        {
+            if (!isPushed)
+            {
+                collision.transform.SetParent(transform);
+                isPushed = true;
+            }
+        }
+    }
+
     private void OnCollisionExit(UnityEngine.Collision collision)
     {
         if (collision.gameObject.CompareTag("Player") || collision.gameObject.CompareTag("PushableBlock"))
