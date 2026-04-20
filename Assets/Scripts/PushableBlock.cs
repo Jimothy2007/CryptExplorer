@@ -2,63 +2,42 @@ using UnityEngine;
 
 public class PushableBlock : MonoBehaviour
 {
-    [SerializeField] private float pushForce = 5f;
-
     private Rigidbody rb;
     private bool isBeingPushed = false;
     private Vector3 pushDirection;
+    private Rigidbody currentPlayerRb;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-
         rb.constraints = RigidbodyConstraints.FreezeRotation;
+    }
+
+    public void StartPush(Vector3 direction, Rigidbody playerRb)
+    {
+        pushDirection = direction;
+        currentPlayerRb = playerRb;
+        isBeingPushed = true;
+    }
+
+    public void StopPush()
+    {
+        isBeingPushed = false;
+        currentPlayerRb = null;
+        rb.linearVelocity = Vector3.zero;
     }
 
     private void FixedUpdate()
     {
-        if (isBeingPushed)
+        if (isBeingPushed && currentPlayerRb != null)
         {
-            rb.linearVelocity = pushDirection.normalized * pushForce;
-        }
-    }
-
-    private void OnCollisionStay(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            Vector3 dir = transform.position - collision.gameObject.transform.position;
-            pushDirection = SnapToAxis(dir);
-            isBeingPushed = true;
-            collision.gameObject.GetComponent<PlayerMovement>().changeToPushSpeed();
-
-            Rigidbody playerRb = collision.gameObject.GetComponent<Rigidbody>();
-            if (playerRb != null)
-            {
-                pushForce = playerRb.linearVelocity.magnitude;
-            }
-        }
-    }
-
-    private void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            collision.gameObject.GetComponent<PlayerMovement>().changeToNormalSpeed();
-            isBeingPushed = false;
-            rb.linearVelocity = Vector3.zero;
-        }
-    }
-
-    private Vector3 SnapToAxis(Vector3 direction)
-    {
-        if (Mathf.Abs(direction.x) >= Mathf.Abs(direction.z))
-        {
-            return new Vector3(direction.x, 0f, 0f);
+            float playerSpeed = Vector3.Dot(currentPlayerRb.linearVelocity, pushDirection.normalized);
+            Vector3 targetVelocity = pushDirection.normalized * playerSpeed;
+            rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, targetVelocity, 0.5f);
         }
         else
         {
-            return new Vector3(0f, 0f, direction.z);
+            rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, Vector3.zero, 0.5f);
         }
     }
 }

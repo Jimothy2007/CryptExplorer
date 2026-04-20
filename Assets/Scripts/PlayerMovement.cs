@@ -14,6 +14,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform cameraBoom;
 
     [SerializeField] private float currentMoveSpeed;
+    [SerializeField] private float pushCheckDistance = 0.6f;
+    private Vector3 lockedAxis = Vector3.zero;
+    private bool isPushing = false;
+    private PushableBlock currentBlock;
     private Rigidbody rb;
     private Vector2 moveInput;
 
@@ -47,16 +51,89 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 moveDirection = (boomForward * moveInput.y + boomRight * moveInput.x);
 
+        CheckForBlock(moveDirection);
+
+        if (isPushing && lockedAxis != Vector3.zero)
+        {
+            float axisAmount = Vector3.Dot(moveDirection, lockedAxis);
+            moveDirection = lockedAxis * axisAmount;
+        }
+
         Vector3 targetVelocity = moveDirection * currentMoveSpeed;
         targetVelocity.y = rb.linearVelocity.y;
+
+        if (isPushing && lockedAxis != Vector3.zero)
+        {
+            float axisVelocity = Vector3.Dot(targetVelocity, lockedAxis);
+            targetVelocity = lockedAxis * axisVelocity;
+            targetVelocity.y = rb.linearVelocity.y;
+        }
 
         rb.linearVelocity = targetVelocity;
 
         if (moveDirection != Vector3.zero)
         {
             float targetYaw = Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg;
+            targetYaw = Mathf.Round(targetYaw / 45f) * 45f;
             Quaternion targetRotation = Quaternion.Euler(0, targetYaw, 0);
             playerMesh.rotation = Quaternion.Slerp(playerMesh.rotation, targetRotation, Time.fixedDeltaTime * 10f);
+        }
+    }
+
+    private void CheckForBlock(Vector3 moveDirection)
+    {
+        if (moveDirection.magnitude < 0.1f)
+        {
+            StopPushing();
+            return;
+        }
+
+        Vector3 snappedDirection = SnapToAxis(moveDirection);
+
+        RaycastHit hit;
+        if (Physics.BoxCast(playerMesh.position, new Vector3(0.4f, 0.5f, 0.4f), snappedDirection, out hit, Quaternion.identity, pushCheckDistance))
+        {
+            PushableBlock block = hit.collider.GetComponent<PushableBlock>();
+            if (block != null)
+            {
+                if (!isPushing)
+                {
+                    isPushing = true;
+                    currentMoveSpeed = pushingMoveSpeed;
+                    lockedAxis = SnapToAxis(moveDirection);
+                    currentBlock = block;
+                    block.StartPush(lockedAxis, rb);
+                }
+                return;
+            }
+        }
+        StopPushing();
+    }
+
+    private void StopPushing()
+    {
+        if (isPushing)
+        {
+            isPushing = false;
+            currentMoveSpeed = maxMoveSpeed;
+            lockedAxis = Vector3.zero;
+            if (currentBlock != null)
+            {
+                currentBlock.StopPush();
+                currentBlock = null;
+            }
+        }
+    }
+
+    private Vector3 SnapToAxis(Vector3 direction)
+    {
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
+        {
+            return new Vector3(Mathf.Sign(direction.x), 0, 0);
+        }
+        else
+        {
+            return new Vector3(0, 0, Mathf.Sign(direction.z));
         }
     }
 
@@ -77,15 +154,9 @@ public class PlayerMovement : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawRay(transform.position, Vector3.down * 1.1f);
-    }
 
-    public void changeToPushSpeed()
-    {
-        currentMoveSpeed = pushingMoveSpeed;
-    }
-
-    public void changeToNormalSpeed()
-    {
-        currentMoveSpeed = maxMoveSpeed;
+        Gizmos.color = isPushing ? Color.green : Color.yellow;
+        Gizmos.DrawWireCube(transform.position + transform.forward * pushCheckDistance,
+            new Vector3(0.8f, 1f, 0.8f));
     }
 }
