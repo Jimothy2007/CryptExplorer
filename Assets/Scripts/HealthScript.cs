@@ -57,7 +57,14 @@ public class HealthScript : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Spike"))
         {
-            TakeDamage(collision.gameObject.GetComponent<SpikeScript>().GetDamage());
+            GameObject currentSpike = collision.gameObject;
+            SpikeScript currentSpikeScript = currentSpike.GetComponent<SpikeScript>();
+
+            TakeDamage(currentSpikeScript.GetDamage());
+
+            Vector3 knockbackDirection = transform.position - currentSpike.transform.position;
+            knockbackDirection.y = 0.25f;
+            gameObject.GetComponent<PlayerMovement>().ApplyKnockback(knockbackDirection, currentSpikeScript.GetKnockbackForce());
         }
     }
 

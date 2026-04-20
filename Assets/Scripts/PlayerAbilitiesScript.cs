@@ -4,13 +4,19 @@ using UnityEngine.InputSystem;
 public class PlayerAbilitiesScript : MonoBehaviour
 {
     private LeverScript currentLever;
+    private Transform currentSnapPoint;
     void OnInteract(InputValue inputValue)
     {
         if (inputValue.isPressed)
         {
+            Debug.Log("Interact button pressed");
             if (currentLever != null)
             {
+                GetComponent<PlayerMovement>().SnapToPoint(currentSnapPoint);
                 currentLever.FlipLever();
+                GetComponent<PlayerMovement>().UnsnapFromPoint();
+                Debug.Log("Interacted with lever: " + currentLever.gameObject.name);
+                currentLever = null;
             }
         }
     }
@@ -23,6 +29,7 @@ public class PlayerAbilitiesScript : MonoBehaviour
             if (hitboxScript != null)
             {
                 currentLever = hitboxScript.GetLeverScript();
+                currentSnapPoint = hitboxScript.GetSnapPoint();
             }
         }
     }
@@ -32,6 +39,7 @@ public class PlayerAbilitiesScript : MonoBehaviour
         if (collider.CompareTag("Lever"))
         {
             currentLever = null;
+            currentSnapPoint = null;
         }
     }
 }

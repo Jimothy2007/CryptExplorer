@@ -15,6 +15,9 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] private float currentMoveSpeed;
     [SerializeField] private float pushCheckDistance = 0.6f;
+    private float knockbackTimer = 0f;
+    private bool hasKnockback => knockbackTimer > 0f;
+    private bool inputEnabled = true;
     private Vector3 lockedAxis = Vector3.zero;
     private bool isPushing = false;
     private PushableBlock currentBlock;
@@ -30,11 +33,13 @@ public class PlayerMovement : MonoBehaviour
 
     void OnMove(InputValue inputValue)
     {
+        if (!inputEnabled) return;
         moveInput = inputValue.Get<Vector2>();
     }
 
     void OnJump(InputValue inputValue)
     {
+        if (!inputEnabled) return;
         if (inputValue.isPressed && IsGrounded())
         {
             rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
@@ -43,6 +48,14 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (knockbackTimer > 0f)
+        {
+            knockbackTimer -= Time.fixedDeltaTime;
+            return;
+        }
+
+        if (!inputEnabled) return;
+
         float boomYaw = cameraBoom.eulerAngles.y;
         Quaternion boomRotation = Quaternion.Euler(0, boomYaw, 0);
 
@@ -139,6 +152,7 @@ public class PlayerMovement : MonoBehaviour
     public void ApplyKnockback(Vector3 direction, float force)
     {
         rb.AddForce(direction.normalized * force / knockbackResistance, ForceMode.Impulse);
+        knockbackTimer = 0.2f;
     }
 
     private bool IsGrounded()
@@ -147,6 +161,33 @@ public class PlayerMovement : MonoBehaviour
 
         isGrounded = hit;
         return isGrounded;
+    }
+
+    public void DisableInput()
+    {
+        inputEnabled = false;
+        moveInput = Vector2.zero;
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
+    }
+
+    public void EnableInput()
+    {
+        inputEnabled = true;
+    }
+
+    public void SnapToPoint(Transform snapPoint)
+    {
+        DisableInput();
+
+        rb.linearVelocity = Vector3.zero;
+        rb.MovePosition(snapPoint.position);
+
+        playerMesh.rotation = snapPoint.rotation;
+    }
+
+    public void UnsnapFromPoint()
+    {
+        EnableInput();
     }
 
     private void OnDrawGizmos()

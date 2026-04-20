@@ -4,17 +4,13 @@ using UnityEngine;
 public class LeverScript : MonoBehaviour
 {
     //[SerializeField] private GameObject platformToMove;
-    [SerializeField] private float rotationSpeed = 5f;
     [SerializeField] private GameObject activatedHitbox;
     [SerializeField] private GameObject deactivatedHitbox;
-
-    private Quaternion deactivatedRotation = Quaternion.Euler(0, 0, 45);
-    private Quaternion activatedRotation = Quaternion.Euler(0, 0, -45);
+    //[SerializeField] private Animator animator;
     private bool isActivated = false;
 
     public void Start()
     {
-        transform.rotation = deactivatedRotation;
         UpdateHitboxes();
     }
 
@@ -35,8 +31,8 @@ public class LeverScript : MonoBehaviour
         if (isActivated) return;
         isActivated = true;
         UpdateHitboxes();
+        //animator.SetBool("IsActivated", true);
         Debug.Log("Lever activated! Moving platform...");
-        StartCoroutine(RotateLever(activatedRotation));
     }
 
     public void DeactivateLever()
@@ -44,28 +40,13 @@ public class LeverScript : MonoBehaviour
         if (!isActivated) return;
         isActivated = false;
         UpdateHitboxes();
+        //animator.SetBool("IsActivated", false);
         Debug.Log("Lever deactivated! Moving platform back...");
-        StartCoroutine(RotateLever(deactivatedRotation));
     }
 
     private void UpdateHitboxes()
     {
         activatedHitbox.SetActive(isActivated);
         deactivatedHitbox.SetActive(!isActivated);
-    }
-
-    private IEnumerator RotateLever(Quaternion targetRotation)
-    {
-        Quaternion startRotation = transform.rotation;
-
-        float t = 0f;
-        while (t < 1f)
-        {
-            t+= Time.deltaTime * rotationSpeed;
-            transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
-            yield return null;
-        }
-
-        transform.rotation = targetRotation;
     }
 }
