@@ -596,7 +596,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   maxMoveSpeed: 5
-  pushingMoveSpeed: 1
+  pushingMoveSpeed: 1.5
   jumpHeight: 7
   knockbackResistance: 1
   isGrounded: 0

@@ -75,8 +75,7 @@ public class PlayerMovement : MonoBehaviour
         {
             float targetYaw = Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg;
             targetYaw = Mathf.Round(targetYaw / 45f) * 45f;
-            Quaternion targetRotation = Quaternion.Euler(0, targetYaw, 0);
-            playerMesh.rotation = Quaternion.Slerp(playerMesh.rotation, targetRotation, Time.fixedDeltaTime * 10f);
+            playerMesh.rotation = Quaternion.Euler(0, targetYaw, 0);
         }
     }
 
@@ -91,7 +90,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 snappedDirection = SnapToAxis(moveDirection);
 
         RaycastHit hit;
-        if (Physics.BoxCast(playerMesh.position, new Vector3(0.4f, 0.5f, 0.4f), snappedDirection, out hit, Quaternion.identity, pushCheckDistance))
+        if (Physics.BoxCast(playerMesh.position, new Vector3(0.4f, 0.5f, 0.4f), playerMesh.forward, out hit, playerMesh.rotation, pushCheckDistance))
         {
             PushableBlock block = hit.collider.GetComponent<PushableBlock>();
             if (block != null)
@@ -152,11 +151,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.red;
+        Gizmos.color = isGrounded ? Color.blue : Color.red;
         Gizmos.DrawRay(transform.position, Vector3.down * 1.1f);
 
         Gizmos.color = isPushing ? Color.green : Color.yellow;
-        Gizmos.DrawWireCube(transform.position + transform.forward * pushCheckDistance,
+        Gizmos.DrawWireCube(playerMesh.position + playerMesh.forward * pushCheckDistance,
             new Vector3(0.8f, 1f, 0.8f));
     }
 }
