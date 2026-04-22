@@ -6,6 +6,8 @@ public class PlayerAbilitiesScript : MonoBehaviour
     private LeverScript currentLever;
     private Transform currentSnapPoint;
     private LadderScript currentLadderInRange;
+    private bool ladderCooldown = false;
+    private bool mountingFromTop = false;
 
     void OnInteract(InputValue inputValue)
     {
@@ -25,7 +27,14 @@ public class PlayerAbilitiesScript : MonoBehaviour
 
             if (currentLadderInRange != null && !playerMovement.IsClimbing())
             {
-                playerMovement.StartClimbing(currentLadderInRange);
+                if (mountingFromTop)
+                {
+                    playerMovement.StartClimbingFromTop(currentLadderInRange);
+                }
+                else
+                {
+                    playerMovement.StartClimbing(currentLadderInRange);
+                }
             }
             else if (playerMovement.IsClimbing())
             {
@@ -46,12 +55,13 @@ public class PlayerAbilitiesScript : MonoBehaviour
             }
         }
 
-        if (collider.CompareTag("Ladder"))
+        if (collider.CompareTag("Ladder") && !ladderCooldown)
         {
             LadderHitboxScript hitboxScript = collider.GetComponent<LadderHitboxScript>();
             if (hitboxScript != null)
             {
                 currentLadderInRange = hitboxScript.GetLadderScript();
+                mountingFromTop = hitboxScript.IsTopHitbox();
             }
         }
     }
@@ -67,6 +77,14 @@ public class PlayerAbilitiesScript : MonoBehaviour
         if (collider.CompareTag("Ladder"))
         {
             currentLadderInRange = null;
+            ladderCooldown = false;
+            mountingFromTop = false;
         }
+    }
+
+    public void SetLadderCooldown(bool value)
+    {
+        ladderCooldown = value;
+        currentLadderInRange = null;
     }
 }

@@ -194,11 +194,36 @@ public class PlayerMovement : MonoBehaviour
 
         rb.linearVelocity = Vector3.zero;
         rb.useGravity = false;
+
+        Vector3 mountPosition = ladder.GetSnapPoint().position;
+        mountPosition.y = transform.position.y;
+        transform.position = mountPosition;
+
+        playerMesh.rotation = ladder.GetSnapPoint().rotation;
+
         rb.constraints = RigidbodyConstraints.FreezeRotation |
                          RigidbodyConstraints.FreezePositionX |
                          RigidbodyConstraints.FreezePositionZ;
-        rb.MovePosition(ladder.GetSnapPoint().position);
-        playerMesh.rotation = ladder.GetSnapPoint().rotation;
+    }
+
+    public void StartClimbingFromTop(LadderScript ladder)
+    {
+        isClimbing = true;
+        currentLadder = ladder;
+        DisableInput();
+
+        rb.linearVelocity = Vector3.zero;
+        rb.useGravity = false;
+
+        Vector3 mountPosition = ladder.GetTopPoint().position;
+        mountPosition.y = transform.position.y;
+        transform.position = mountPosition;
+
+        playerMesh.rotation = ladder.GetTopPoint().rotation;
+
+        rb.constraints = RigidbodyConstraints.FreezeRotation |
+                         RigidbodyConstraints.FreezePositionX |
+                         RigidbodyConstraints.FreezePositionZ;
     }
 
     public void StopClimbing(bool exitFromTop)
@@ -211,6 +236,13 @@ public class PlayerMovement : MonoBehaviour
         {
             rb.MovePosition(currentLadder.GetTopPoint().position);
             playerMesh.rotation = currentLadder.GetTopPoint().rotation;
+            GetComponent<PlayerAbilitiesScript>().SetLadderCooldown(true);
+        }
+        else
+        {
+            rb.MovePosition(currentLadder.GetSnapPoint().position);
+            playerMesh.rotation = currentLadder.GetSnapPoint().rotation;
+            GetComponent<PlayerAbilitiesScript>().SetLadderCooldown(true);
         }
 
         currentLadder = null;

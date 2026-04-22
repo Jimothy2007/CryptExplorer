@@ -3,8 +3,10 @@ using UnityEngine;
 public class LadderHitboxScript : MonoBehaviour
 {
     [SerializeField] private LadderScript ladderScript;
+    [SerializeField] private bool isTopHitbox;
 
     public LadderScript GetLadderScript() => ladderScript;
+    public bool IsTopHitbox() => isTopHitbox;
 
     private void OnDrawGizmos()
     {
