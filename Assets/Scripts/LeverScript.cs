@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class LeverScript : MonoBehaviour
 {
-    //[SerializeField] private GameObject platformToMove;
+    [SerializeField] private GameObject platformToMove;
     [SerializeField] private GameObject activatedHitbox;
     [SerializeField] private GameObject deactivatedHitbox;
     //[SerializeField] private Animator animator;
@@ -32,6 +32,7 @@ public class LeverScript : MonoBehaviour
         isActivated = true;
         UpdateHitboxes();
         //animator.SetBool("IsActivated", true);
+        platformToMove.GetComponent<MovingPlatformScript>().MoveToActivatedPosition();
         Debug.Log("Lever activated! Moving platform...");
     }
 
@@ -41,6 +42,7 @@ public class LeverScript : MonoBehaviour
         isActivated = false;
         UpdateHitboxes();
         //animator.SetBool("IsActivated", false);
+        platformToMove.GetComponent<MovingPlatformScript>().MoveToDeactivatedPosition();
         Debug.Log("Lever deactivated! Moving platform back...");
     }
 

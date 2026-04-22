@@ -20,9 +20,12 @@ public class PlayerMovement : MonoBehaviour
     private bool inputEnabled = true;
     private Vector3 lockedAxis = Vector3.zero;
     private bool isPushing = false;
+    private bool isClimbing = false;
+    private LadderScript currentLadder;
     private PushableBlock currentBlock;
     private Rigidbody rb;
     private Vector2 moveInput;
+    public bool IsClimbing() => isClimbing;
 
     private void Awake()
     {
@@ -33,7 +36,7 @@ public class PlayerMovement : MonoBehaviour
 
     void OnMove(InputValue inputValue)
     {
-        if (!inputEnabled) return;
+        if (!inputEnabled && !isClimbing) return;
         moveInput = inputValue.Get<Vector2>();
     }
 
@@ -51,6 +54,12 @@ public class PlayerMovement : MonoBehaviour
         if (knockbackTimer > 0f)
         {
             knockbackTimer -= Time.fixedDeltaTime;
+            return;
+        }
+
+        if (isClimbing)
+        {
+            HandleClimbing();
             return;
         }
 
@@ -122,6 +131,46 @@ public class PlayerMovement : MonoBehaviour
         StopPushing();
     }
 
+    private void HandleClimbing()
+    {
+        if (currentLadder == null) return;
+
+        float verticalInput = moveInput.y;
+        Debug.Log("Climbing - moveInput: " + moveInput + " verticalInput: " + verticalInput);
+
+        if (verticalInput > 0f)
+        {
+            rb.linearVelocity = Vector3.up * currentLadder.GetClimbSpeed();
+            Debug.Log("Moving up at speed: " + currentLadder.GetClimbSpeed());
+
+            if (transform.position.y >= currentLadder.GetTopPoint().position.y)
+            {
+                StopClimbing(true);
+                return;
+            }
+        }
+        else if (verticalInput < 0f)
+        {
+            rb.linearVelocity = Vector3.down * currentLadder.GetDescendSpeed();
+            Debug.Log("Moving down at speed: " + currentLadder.GetDescendSpeed());
+
+            if (transform.position.y <= currentLadder.GetSnapPoint().position.y)
+            {
+                StopClimbing(false);
+                return;
+            }
+        }
+        else
+        {
+            rb.linearVelocity = Vector3.zero;
+        }
+
+        Vector3 lockedPosition = rb.position;
+        lockedPosition.x = currentLadder.GetSnapPoint().position.x;
+        lockedPosition.z = currentLadder.GetSnapPoint().position.z;
+        rb.MovePosition(lockedPosition);
+    }
+
     private void StopPushing()
     {
         if (isPushing)
@@ -135,6 +184,37 @@ public class PlayerMovement : MonoBehaviour
                 currentBlock = null;
             }
         }
+    }
+
+    public void StartClimbing(LadderScript ladder)
+    {
+        isClimbing = true;
+        currentLadder = ladder;
+        DisableInput();
+
+        rb.linearVelocity = Vector3.zero;
+        rb.useGravity = false;
+        rb.constraints = RigidbodyConstraints.FreezeRotation |
+                         RigidbodyConstraints.FreezePositionX |
+                         RigidbodyConstraints.FreezePositionZ;
+        rb.MovePosition(ladder.GetSnapPoint().position);
+        playerMesh.rotation = ladder.GetSnapPoint().rotation;
+    }
+
+    public void StopClimbing(bool exitFromTop)
+    {
+        isClimbing = false;
+        rb.useGravity = true;
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        if (exitFromTop && currentLadder != null)
+        {
+            rb.MovePosition(currentLadder.GetTopPoint().position);
+            playerMesh.rotation = currentLadder.GetTopPoint().rotation;
+        }
+
+        currentLadder = null;
+        EnableInput();
     }
 
     private Vector3 SnapToAxis(Vector3 direction)
